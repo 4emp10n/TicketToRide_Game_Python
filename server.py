@@ -1,57 +1,42 @@
 import socket
 from _thread import *
-import pickle
 
-server = "192.168.178.43"
-port = 5555
+# get the hostname
+host = "192.168.178.43"
+port = 5555  # initiate port no above 1024
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket = socket.socket()  # get instance
+# look closely. The bind() function takes tuple as argument
+server_socket.bind((host, port))  # bind host address and port together
 
-try:
-    s.bind((server, port))
-except socket.error as e:
-    str(e)
+# configure how many client the server can listen simultaneously
+server_socket.listen(2)
 
-s.listen(2)
-print("Waiting for connection, Server Started")
 
-#players = [Player(0, 0, 50, 50, (255, 0, 0)), Player(100, 100, 50, 50, (0, 255, 255))]
-
+# conn, address = server_socket.accept()  # accept new connection
 
 def thread_client(conn, player):
-    conn.send(str.encode("Connected"))
-    #conn.send(pickle.dumps(players[player]))
-    reply = ""
+    print("thread_client")
+    print("Connection from: " + str(conn))
     while True:
-        try:
-            #data = pickle.loads(conn.recv(2048))
-            data = conn.receive(1024).decode()
-            #players[player] = data
 
-            if not data:
-                print("Disconnected")
-                break
-            else:
-                if player == 1:
-                    reply = "Hello player 1"
-                else:
-                    reply = "Hello player 2"
-                print("Received: ", data)
-                print("Sending: ", reply)
-
-            conn.sendall(reply)
-        except:
+        # receive data stream. it won't accept data packet greater than 1024 bytes
+        data = conn.recv(1024).decode()
+        if not data:
+            # if data is not received break
             break
+        print("from connected user: " + str(data))
+        data = input(' -> ')
+        conn.send(data.encode())  # send data to the client
 
-    print("Loss connection")
-    conn.close()
+    conn.close()  # close the connection
 
 
-currentPlayer = 0
+if __name__ == '__main__':
+    currentPlayer = 0
+    while True:
+        conn, addr = server_socket.accept()
+        print("Connected to:", addr)
 
-while True:
-    conn, addr = s.accept()
-    print("Connected to:", addr)
-
-    start_new_thread(thread_client, (conn, currentPlayer))
-    currentPlayer += 1
+        start_new_thread(thread_client, (conn, currentPlayer))
+        currentPlayer += 1
