@@ -8,7 +8,7 @@ class Network:
         self.server = "192.168.178.43"
         self.port = 5555
         self.addr = (self.server, self.port)
-        self.p = self.connect()
+        # self.p = self.connect()
 
     def getP(self):
         return self.p
@@ -28,7 +28,7 @@ class Network:
             print(e)
 
     def recv(self):
-        return self.client.recv(1024).decode()
+        return pickle.loads(self.client.recv(2048))
 
     def close(self):
         self.client.close()

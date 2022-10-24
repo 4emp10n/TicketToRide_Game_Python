@@ -1,17 +1,14 @@
 import socket
 from network import Network
+from cards import *
 import pygame
 import random
-
-colors = {"pink": (148, 0, 211), "white": (255, 255, 255), "blue": (0, 0, 128), "yellow": (255, 255, 0),
-          "orange": (210, 105, 30), "black": (0, 0, 0), "red": (255, 0, 0), "green": (0, 128, 0),
-          "jocker": "jocker"}
 
 pygame.init()
 
 SCREEN_WIDTH = pygame.display.Info().current_w - 10
 SCREEN_HEIGHT = pygame.display.Info().current_h - 20
-#window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+# window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 window.fill((255, 255, 255))
 
@@ -28,159 +25,6 @@ playerCardDeckSurf.fill((255, 255, 255))
 mapSurf = pygame.Surface((1320, 580))
 mapSurf.fill((255, 0, 255))
 MAPSURFLOCATION = (220, 70)
-
-
-def randColor(colors):
-    colorKey = random.choice(list(colors))
-    return colors[colorKey]
-
-
-# ============Create-Surfaces-END=============
-class Button:
-    def __init__(self, color, x, y, width=100, height=40, text=""):
-        self.color = color
-        self.width = width
-        self.height = height
-        self.surf = pygame.Surface((self.width, self.height))
-        if color != colors["jocker"]:
-            self.surf.fill(self.color)
-        self.rect = self.surf.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.clicked = False
-        self.text = text
-        self.addText()
-
-    def addText(self, text_x=15, text_y=15, size=30):
-        font = pygame.font.SysFont("comicsans", size)
-        if self.color == (0, 0, 0):
-            text = font.render(self.text, 1, (255, 255, 255))
-        else:
-            text = font.render(self.text, 1, (0, 0, 0))
-        self.surf.blit(text, (text_x, text_y))
-
-    def click(self):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.rect.x <= x1 <= self.rect.x + self.rect.width and self.rect.y <= y1 <= self.rect.y + self.height:
-            return self.text
-
-
-class Card(Button):
-    def __init__(self, color, x, y, width, height):
-        super().__init__(color, x, y, width, height)
-
-    clickedCounter = 0
-
-    def click(self, pos):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.rect.x <= x1 <= self.rect.x + self.rect.width and self.rect.y <= y1 <= self.rect.y + self.height:
-            if not self.clicked and Card.clickedCounter < 2:
-                self.clicked = True
-                Card.clickedCounter += 1
-                self.text = '.'
-                self.addText(65, -8, 50)
-            elif self.clicked:
-                self.clicked = False
-                Card.clickedCounter -= 1
-                self.surf.fill(self.color)
-
-
-class JockerCard(Card):
-    def __init__(self, x, y, width, height, imgPath):
-        super(JockerCard, self).__init__(colors["jocker"], x, y, width, height)
-        self.imgPath = imgPath
-        self.surf = pygame.image.load(self.imgPath)
-        self.surf = pygame.transform.scale(self.surf, (self.width, self.height))
-
-    def click(self, pos):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.rect.x <= x1 <= self.rect.x + self.rect.width and self.rect.y <= y1 <= self.rect.y + self.height:
-            if not self.clicked and Card.clickedCounter < 1:
-                self.clicked = True
-                Card.clickedCounter += 2
-                self.text = '.'
-                self.addText(65, -8, 50)
-            elif self.clicked:
-                self.clicked = False
-                Card.clickedCounter -= 2
-                self.surf = pygame.image.load(self.imgPath)
-                self.surf = pygame.transform.scale(self.surf, (self.width, self.height))
-
-
-class CardBack(JockerCard):
-    def __init__(self, x, y, width, height, imgPath):
-        super(CardBack, self).__init__(x, y, width, height, imgPath)
-        self.deckClickedCounter = 0
-
-    def click(self, pos):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.rect.x <= x1 <= self.rect.x + self.rect.width and self.rect.y <= y1 <= self.rect.y + self.height:
-            if Card.clickedCounter == 0:
-                self.clicked = True
-                Card.clickedCounter += 1
-                self.deckClickedCounter += 1
-                self.text = '.'
-                self.addText(65, -8, 50)
-            elif Card.clickedCounter == 1 and self.deckClickedCounter == 0:
-                self.clicked = True
-                Card.clickedCounter += 1
-                self.deckClickedCounter += 1
-                self.text = '.'
-                self.addText(65, -8, 50)
-            elif Card.clickedCounter == 1 and self.deckClickedCounter == 1:
-                self.clicked = True
-                Card.clickedCounter += 1
-                self.deckClickedCounter += 1
-                self.text = '..'
-                self.addText(65, -8, 50)
-            elif Card.clickedCounter == 2 and self.deckClickedCounter == 1:
-                self.clicked = False
-                Card.clickedCounter -= 1
-                self.deckClickedCounter -= 1
-                self.surf = pygame.image.load(self.imgPath)
-                self.surf = pygame.transform.scale(self.surf, (self.width, self.height))
-            elif Card.clickedCounter == 2 and self.deckClickedCounter == 2:
-                self.clicked = False
-                Card.clickedCounter -= 2
-                self.deckClickedCounter -= 2
-                self.surf = pygame.image.load(self.imgPath)
-                self.surf = pygame.transform.scale(self.surf, (self.width, self.height))
-
-
-class WhiteCard(Card):
-    def __init__(self, x, y, width, height):
-        super(WhiteCard, self).__init__(colors["black"], x, y, width, height)
-        self.innerSurf = pygame.Surface((width - 10, height - 10))
-        self.innerSurf.fill(colors["white"])
-        self.surf.blit(self.innerSurf, (5, 5))
-
-    def addTextForWhiteCard(self, text_x=15, text_y=15, size=30):
-        font = pygame.font.SysFont("comicsans", size)
-        if self.color == (0, 0, 0):
-            text = font.render(self.text, 1, (0, 0, 0))
-        else:
-            text = font.render(self.text, 1, (255, 255, 255))
-        self.innerSurf.blit(text, (text_x, text_y))
-        self.surf.blit(self.innerSurf, (5, 5))
-
-    def click(self, pos):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.rect.x <= x1 <= self.rect.x + self.rect.width and self.rect.y <= y1 <= self.rect.y + self.height:
-            if not self.clicked and Card.clickedCounter < 2:
-                self.clicked = True
-                Card.clickedCounter += 1
-                self.text = '.'
-                self.addTextForWhiteCard(60, -13, 50)
-            elif self.clicked:
-                self.clicked = False
-                Card.clickedCounter -= 1
-                self.innerSurf.fill(colors["white"])
-                self.surf.blit(self.innerSurf, (5, 5))
 
 
 class Road(Button):
@@ -249,6 +93,13 @@ class Way:
             return True
 
 
+def randColor(colors):
+    colorKey = random.choice(list(colors))
+    return colors[colorKey]
+
+
+# ============Create-Surfaces-END=============
+
 
 class cityName:
     def __init__(self, name, x, y):
@@ -266,23 +117,12 @@ wayCE = Way([Road(colors["white"], 625, 312, 25, 75), Road(colors["white"], 625,
 cities = [cityName("A", 340, 255), cityName("E", 625, 255), cityName("B", 905, 255),
           cityName("D", 625, 133), cityName("C", 625, 465)]
 ways = [wayAE, wayEB, wayDE, wayCE]
+
+
 # cards = [Card((randColor(colors)), 70, 190, 140, 82), Card((randColor(colors)), 70, 282, 140, 82),
 #          Card((randColor(colors)), 70, 374, 140, 82),
 #          Card((randColor(colors)), 70, 466, 140, 82), Card((randColor(colors)), 70, 558, 140, 82),
 #          Card((randColor(colors)), 70, 650, 140, 82)]
-
-cards = []
-deckCardLocation = [190, 282, 374, 466, 558, 650]
-
-cards.append(CardBack(70, deckCardLocation[0], 140, 82, r"C:\Users\4emp10n\Downloads\CardBack.jpg"))
-for i in range(1, 6):
-    tempColor = randColor(colors)
-    if tempColor == colors["white"]:
-        cards.append(WhiteCard(70, deckCardLocation[i], 140, 82))
-    elif tempColor == colors["jocker"]:
-        cards.append(JockerCard(70, deckCardLocation[i], 140, 82, r"C:\Users\4emp10n\Downloads\raduga2.jpg"))
-    else:
-        cards.append(Card(tempColor, 70, deckCardLocation[i], 140, 82))
 
 
 def changeCard(card):
@@ -308,9 +148,25 @@ playerCardsSum = {"pink": 0, "white": 0, "blue": 0, "yellow": 0, "orange": 0, "b
 btns = [Button((255, 255, 0), 70, 70, 140, 65, "Exit"), Button((255, 255, 0), 1359, 662, 180, 78, "Make Move"),
         Button((255, 255, 0), 1359, 746, 180, 78, "Scip Move"), Button((255, 255, 0), 70, 746, 180, 78, "Choose card")]
 
+cards = []
+deckCardLocation = [190, 282, 374, 466, 558, 650]
+
+
+def addCardsToDeck(CardsDeckServer):
+    cards.append(CardBack(70, deckCardLocation[0], 140, 82, r"C:\Users\4emp10n\Downloads\CardBack.jpg"))
+    for i in range(1, 6):
+        tempColor = CardsDeckServer[i - 1]
+        if tempColor == colors["white"]:
+            cards.append(WhiteCard(70, deckCardLocation[i], 140, 82))
+        elif tempColor == colors["jocker"]:
+            cards.append(JockerCard(70, deckCardLocation[i], 140, 82, r"C:\Users\4emp10n\Downloads\raduga2.jpg"))
+        else:
+            cards.append(Card(tempColor, 70, deckCardLocation[i], 140, 82))
+
 
 def addCardsSum(playerCards, playerCardsSum):
     i = 0
+    font = pygame.font.SysFont("comicsans", 40)
     for sum in playerCardsSum:
         text = font.render("{}".format(playerCardsSum[sum]), 1, (0, 0, 0))
         window.blit(text, (playerCards[i].rect.x + playerCards[i].rect.width / 2 - 15,
@@ -382,6 +238,7 @@ def makeMove():
         if not way.isBuilt and way.checkWayBuilding():
             way.isBuilt = True
 
+
 def selectWay(pos):
     selectedWay = None
     isRoadSelected = False
@@ -403,109 +260,109 @@ def selectWay(pos):
             road.click(pos, colors["blue"])
 
 
-
-# TIMER Design
-TIMER = pygame.USEREVENT + 1
-pygame.time.set_timer(TIMER, 1000)
-font = pygame.font.SysFont("comicsans", 40)
-timer_time = 60
-timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-        if event.type == TIMER:
-            timer_time -= 1
-            timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
-            window.fill(colors["white"])
-            window.blit(timer_text, (90, 133))
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            for btn in btns:
-                if btn.click() == "Exit":
-                    running = False
-                if btn.click() == "Choose card":
-                    window.fill(colors["white"])
-                    chooseCard()
-                if btn.click() == "Make Move":
-                    makeMove()
-
-            selectWay(pos)
-
-            for card in cards:
-                card.click(pos)
-            # wayAB.checkWayBuilding()
-            # wayAB.testFunc()
-
-    # ===========Add-Surfaces=============
-    # Add timer wo window
-    window.blit(timer_text, (90, 133))
-    # Add cardDeckSurf
-    window.blit(cardDeckSurf, (70, 190))
-    # Add playerCardDeckSurf
-    window.blit(playerCardDeckSurf, (250, 660))
-    # Add mapSurf
-    window.blit(mapSurf, MAPSURFLOCATION)
-    # ===========Add-Surfaces-END=============
-
-    # Add roads
-    for wayName in ways:
-        for road in wayName.way:
-            mapSurf.blit(road.surf, road.rect)
-
-    # Add cities
-    for city in cities:
-        mapSurf.blit(city.name, (city.x, city.y))
-
-    # Add btns
-    for btn in btns:
-        if btn.text == "Exit":
-            btn.surf.fill(btn.color)
-            btn.addText(20, -5, 50)
-
-        if btn.text == "Choose card":
-            btn.surf.fill(btn.color)
-            btn.addText(6, 15, 30)
-        window.blit(btn.surf, btn.rect)
-    # Add cards
-    for card in cards:
-        window.blit(card.surf, card.rect)
-
-    # Add cards sum
-    addCardsSum(playerCards, playerCardsSum)
-
-    drawCircles()
-
-    # Add player cards
-    for card in playerCards:
-        window.blit(card.surf, card.rect)
-    pygame.display.flip()
-pygame.quit()
-
-
-
-
-
-
-
 def client_program():
+    # TIMER Design
+    TIMER = pygame.USEREVENT + 1
+    pygame.time.set_timer(TIMER, 1000)
+    font = pygame.font.SysFont("comicsans", 40)
+    timer_time = 60
+    timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
+    # TIMER DESIGN-END
 
+    # Network initialize
     net = Network()
     net.connect()
+    # Network initialize-END
+
+    CardsDeckServer = net.recv()  # get deck cards from server
+    addCardsToDeck(CardsDeckServer)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+            if event.type == TIMER:
+                timer_time -= 1
+                timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
+                window.fill(colors["white"])
+                window.blit(timer_text, (90, 133))
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for btn in btns:
+                    if btn.click() == "Exit":
+                        running = False
+                    if btn.click() == "Choose card":
+                        window.fill(colors["white"])
+                        chooseCard()
+                    if btn.click() == "Make Move":
+                        makeMove()
+
+                selectWay(pos)
+
+                for card in cards:
+                    card.click(pos)
+                # wayAB.checkWayBuilding()
+                # wayAB.testFunc()
+
+        # ===========Add-Surfaces=============
+        # Add timer wo window
+        window.blit(timer_text, (90, 133))
+        # Add cardDeckSurf
+        window.blit(cardDeckSurf, (70, 190))
+        # Add playerCardDeckSurf
+        window.blit(playerCardDeckSurf, (250, 660))
+        # Add mapSurf
+        window.blit(mapSurf, MAPSURFLOCATION)
+        # ===========Add-Surfaces-END=============
+
+        # Add roads
+        for wayName in ways:
+            for road in wayName.way:
+                mapSurf.blit(road.surf, road.rect)
+
+        # Add cities
+        for city in cities:
+            mapSurf.blit(city.name, (city.x, city.y))
+
+        # Add btns
+        for btn in btns:
+            if btn.text == "Exit":
+                btn.surf.fill(btn.color)
+                btn.addText(20, -5, 50)
+
+            if btn.text == "Choose card":
+                btn.surf.fill(btn.color)
+                btn.addText(6, 15, 30)
+            window.blit(btn.surf, btn.rect)
+        # Add deck cards
+        for card in cards:
+            window.blit(card.surf, card.rect)
+
+        # Add cards sum
+        addCardsSum(playerCards, playerCardsSum)
+
+        drawCircles()
+
+        # Add player cards
+        for card in playerCards:
+            window.blit(card.surf, card.rect)
+        pygame.display.flip()
+    pygame.quit()
+    # ==============================
 
     while True:
         net.send()
-        #client_socket.send(message.encode())  # send message
-        #data = client_socket.recv(1024).decode()  # receive response
+        # client_socket.send(message.encode())  # send message
+        # data = client_socket.recv(1024).decode()  # receive response
         data = net.recv()
         print('Received from server: ' + data)  # show in terminal
         net.send()
     net.close()
+
 
 if __name__ == '__main__':
     client_program()
