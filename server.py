@@ -16,6 +16,7 @@ server_socket.listen(2)
 # ===============DeckCards========================
 
 deckCards = []
+moves = [0, 0]
 
 
 def randColor(colors):
@@ -26,33 +27,45 @@ def randColor(colors):
 for i in range(1, 6):
     deckCards.append(randColor(colors))
 
-
 # ===============DeckCards========================
 
-def thread_client(conn, player, clients):
-    for client in clients:
-        client.send(pickle.dumps(deckCards))
-    while True:
+playersTurn = 1
 
-        # receive data stream. it won't accept data packet greater than 1024 bytes
-        data = conn.recv(1024).decode()
-        if not data:
-            # if data is not received break
-            break
-        print("from connected user: " + str(data))
-        data = input(' -> ')
-        conn.send(data.encode())  # send data to the client
+
+def thread_client(conn, player, clients):
+    conn.send(pickle.dumps(player))  # send player id
+    global playersTurn
+    global deckCards
+    while True:
+        request = pickle.loads(conn.recv(2048))
+        if request == "Choose card":
+            conn.send(pickle.dumps(playersTurn))
+            clientsAnswer = pickle.loads(conn.recv(2048))
+            if clientsAnswer == "OK" and playersTurn == 1:
+                playersTurn = 2
+                deckCards = pickle.loads(conn.recv(2048))
+            elif clientsAnswer == "OK" and playersTurn == 2:
+                playersTurn = 1
+                deckCards = pickle.loads(conn.recv(2048))
+            elif clientsAnswer == "NO":
+                pass
+
+        if request == "GetCards":
+            conn.send(pickle.dumps(deckCards))
+
+        if request == "GetTurn":
+            conn.send(pickle.dumps(playersTurn))
 
     conn.close()  # close the connection
 
 
+clients = []
 if __name__ == '__main__':
-    currentPlayer = 0
-    clients = []
+    currentPlayer = 1
+
     while True:
         conn, addr = server_socket.accept()  # accept new connection
         clients.append(conn)
         print("Connected to:", addr)
-
         start_new_thread(thread_client, (conn, currentPlayer, clients))
         currentPlayer += 1

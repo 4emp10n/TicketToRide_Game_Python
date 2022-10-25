@@ -8,22 +8,21 @@ class Network:
         self.server = "192.168.178.43"
         self.port = 5555
         self.addr = (self.server, self.port)
-        # self.p = self.connect()
+        self.player = int(self.connect())
 
-    def getP(self):
-        return self.p
+    def getPlayer(self):
+        return self.player
 
     def connect(self):
         try:
             self.client.connect(self.addr)
-            # return pickle.loads(self.client.recv(2048))
+            return pickle.loads(self.client.recv(2048))
         except:
             pass
 
-    def send(self):
+    def send(self, deckCards):
         try:
-            message = input(" -> ")
-            self.client.send(message.encode())
+            self.client.send(pickle.dumps(deckCards))
         except socket.error as e:
             print(e)
 
