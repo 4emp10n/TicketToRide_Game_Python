@@ -270,7 +270,7 @@ def makeMove():
             way.isBuilt = True
 
 
-def selectWay(pos):
+def selectWay(pos, player):
     selectedWay = None
     isRoadSelected = False
     for wayName in ways:
@@ -285,10 +285,12 @@ def selectWay(pos):
         for wayName in ways:
             if not wayName.isBuilt:
                 for road in wayName.way:
-                    road.click(pos, colors["blue"])
+                    #road.click(pos, colors["blue"])
+                    road.click(pos, player)
     elif isRoadSelected:
         for road in selectedWay.way:
-            road.click(pos, colors["blue"])
+            #road.click(pos, colors["blue"])
+            road.click(pos, player)
 
 
 def compareWithServerDeck(CardsDeckServer, Player):
@@ -362,7 +364,7 @@ def client_program():
                     if btn.click(pos) == "Make Move":
                         makeMove()
 
-                selectWay(pos)
+                selectWay(pos, player)
 
                 for card in player.cards:
                     card.click(pos)
