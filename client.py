@@ -1,5 +1,6 @@
 import socket
 from network import Network
+from road import *
 from cards import *
 import pygame
 import random
@@ -25,73 +26,6 @@ playerCardDeckSurf.fill((255, 255, 255))
 mapSurf = pygame.Surface((1320, 580))
 mapSurf.fill((255, 0, 255))
 MAPSURFLOCATION = (220, 70)
-
-
-class Road(Button):
-    def __init__(self, color, x, y, width=75, height=25):
-        super().__init__(color, x, y, width, height)
-        self.jockerSelected = False
-
-    def click(self, pos, player):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.rect.x + MAPSURFLOCATION[0] <= x1 <= MAPSURFLOCATION[
-            0] + self.rect.x + self.rect.width and self.rect.y + MAPSURFLOCATION[1] <= y1 <= MAPSURFLOCATION[
-            1] + self.rect.y + self.height:
-            if self.clicked:
-                for color in colors:
-                    if self.jockerSelected:
-                        self.clicked = False
-                        self.jockerSelected = False
-                        player.playerCardsSum["jocker"] += 1
-                        window.fill(colors["white"])
-                        self.changeRoadColor(self.color)
-                        break
-                    elif colors[color] == self.color:
-                        self.clicked = False
-                        player.playerCardsSum[color] += 1
-                        window.fill(colors["white"])
-                        self.changeRoadColor(self.color)
-                        break
-                        # self.changeRoadColor((0, 255, 0))
-            else:
-                for color in colors:
-                    if colors[color] == self.color:
-                        if player.playerCardsSum[color] > 0:
-                            self.clicked = True
-                            player.playerCardsSum[color] -= 1
-                            window.fill(colors["white"])
-                            pygame.draw.circle(self.surf, player.color, (5, 5), 7)
-                            break
-                        elif player.playerCardsSum["jocker"] > 0:
-                            self.clicked = True
-                            self.jockerSelected = True
-                            player.playerCardsSum["jocker"] -= 1
-                            window.fill(colors["white"])
-                            pygame.draw.circle(self.surf, player.color, (5, 5), 7)
-                            break
-
-    def changeRoadColor(self, color):
-        self.color = color
-        self.surf.fill(self.color)
-
-    def getBottomRight(self):
-        return self.rect.x, self.rect.y
-
-
-class Way:
-    def __init__(self, roads):
-        self.way = roads
-        self.isBuilt = False
-
-    def checkWayBuilding(self):
-        clickedCounter = 0
-        for road in self.way:
-            if road.clicked:
-                clickedCounter += 1
-        if clickedCounter == len(self.way):
-            return True
-
 
 class Player():
     def __init__(self, color=colors["blue"]):
@@ -195,16 +129,21 @@ class cityName:
         self.y = y
 
 
-wayAE = Way([Road(colors["green"], 372, 272), Road(colors["green"], 457, 272), Road(colors["green"], 542, 272)])
-wayEB = Way([Road(colors["yellow"], 657, 272), Road(colors["yellow"], 742, 272), Road(colors["yellow"], 827, 272)])
-wayDE = Way([Road(colors["red"], 625, 185, 25, 75)])
-wayCE = Way([Road(colors["white"], 625, 312, 25, 75), Road(colors["white"], 625, 397, 25, 75)])
+wayAE = Way([Road(colors["green"], 372, 272), Road(colors["green"], 457, 272), Road(colors["green"], 542, 272)], "AB")
+wayEB = Way([Road(colors["yellow"], 657, 272), Road(colors["yellow"], 742, 272), Road(colors["yellow"], 827, 272)], "EB")
+wayDE = Way([Road(colors["red"], 625, 185, 25, 75)], "DE")
+wayCE = Way([Road(colors["white"], 625, 312, 25, 75), Road(colors["white"], 625, 397, 25, 75)], "CE")
 
 cities = [cityName("A", 340, 255), cityName("E", 625, 255), cityName("B", 905, 255),
           cityName("D", 625, 133), cityName("C", 625, 465)]
 ways = [wayAE, wayEB, wayDE, wayCE]
 
-
+def updateWays(ways, wayName):
+    for way in ways:
+        if way.wayName == wayName:
+            for road in way.way:
+                pygame.draw.circle(road.surf, colors["orange"], (5, 5), 7)
+            way.isBuilt = True
 # cards = [Card((randColor(colors)), 70, 190, 140, 82), Card((randColor(colors)), 70, 282, 140, 82),
 #          Card((randColor(colors)), 70, 374, 140, 82),
 #          Card((randColor(colors)), 70, 466, 140, 82), Card((randColor(colors)), 70, 558, 140, 82),
@@ -268,6 +207,7 @@ def makeMove():
     for way in ways:
         if not way.isBuilt and way.checkWayBuilding():
             way.isBuilt = True
+            return way.wayName
 
 
 def selectWay(pos, player):
@@ -286,11 +226,11 @@ def selectWay(pos, player):
             if not wayName.isBuilt:
                 for road in wayName.way:
                     #road.click(pos, colors["blue"])
-                    road.click(pos, player)
+                    road.click(window, pos, player)
     elif isRoadSelected:
         for road in selectedWay.way:
             #road.click(pos, colors["blue"])
-            road.click(pos, player)
+            road.click(window, pos, player)
 
 
 def compareWithServerDeck(CardsDeckServer, Player):
@@ -317,6 +257,7 @@ def client_program():
     # Network initialize-END
     net.send("GetCards")
     CardsDeckServer = net.recv()  # get deck cards from server
+
 
     # players_moves = net.recv()
     # =========Init player==============
@@ -362,7 +303,9 @@ def client_program():
                             net.send("NO")
 
                     if btn.click(pos) == "Make Move":
-                        makeMove()
+                        wayName = makeMove()
+                        net.send("SendWay")
+                        net.send(wayName)
 
                 selectWay(pos, player)
 
@@ -381,6 +324,10 @@ def client_program():
         # Add mapSurf
         window.blit(mapSurf, MAPSURFLOCATION)
         # ===========Add-Surfaces-END=============
+
+        net.send("GetWays")
+        updateWays(ways, net.recv())
+
 
         # Add roads
         for wayName in ways:

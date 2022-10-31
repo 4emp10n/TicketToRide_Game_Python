@@ -30,12 +30,13 @@ for i in range(1, 6):
 # ===============DeckCards========================
 
 playersTurn = 1
-
+wayName = ""
 
 def thread_client(conn, player, clients):
     conn.send(pickle.dumps(player))  # send player id
     global playersTurn
     global deckCards
+    global wayName
     while True:
         request = pickle.loads(conn.recv(2048))
         if request == "Choose card":
@@ -50,6 +51,11 @@ def thread_client(conn, player, clients):
             elif clientsAnswer == "NO":
                 pass
 
+        if request == "SendWay":
+            wayName = pickle.loads(conn.recv(2048))
+            print(wayName)
+        if request == "GetWays":
+            conn.send(pickle.dumps(wayName))
         if request == "GetCards":
             conn.send(pickle.dumps(deckCards))
 
