@@ -16,8 +16,6 @@ server_socket.listen(2)
 # ===============DeckCards========================
 
 deckCards = []
-moves = [0, 0]
-
 
 def randColor(colors):
     colorKey = random.choice(list(colors))
@@ -60,17 +58,17 @@ def thread_client(conn, player, clients):
                 wayName = pickle.loads(conn.recv(2048))
             elif clientsAnswer == "NO":
                 pass
-
-        if request == "SendWay":
-            wayName = pickle.loads(conn.recv(2048))
-            print(wayName)
         if request == "GetWays":
             conn.send(pickle.dumps(wayName))
         if request == "GetCards":
             conn.send(pickle.dumps(deckCards))
-
         if request == "GetTurn":
             conn.send(pickle.dumps(playersTurn))
+
+        #Doesnt use yet
+        if request == "SendWay":
+            wayName = pickle.loads(conn.recv(2048))
+            print(wayName)
 
     conn.close()  # close the connection
 
@@ -84,4 +82,7 @@ if __name__ == '__main__':
         clients.append(conn)
         print("Connected to:", addr)
         start_new_thread(thread_client, (conn, currentPlayer, clients))
-        currentPlayer += 1
+        if currentPlayer == 3:
+            currentPlayer = 1
+        else:
+            currentPlayer += 1

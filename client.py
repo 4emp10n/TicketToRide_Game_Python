@@ -76,11 +76,21 @@ class Player():
                 if card.clicked:
                     if index != 0:
                         for color in self.playerCardsSum:
-                            if (colors[color] == colors["white"] and isinstance(card, WhiteCard)) or (
-                                    colors[color] == card.color):
+                            if isinstance(self.cards[index], WhiteCard):
+                                self.playerCardsSum["white"] += 1
+                                self.cards[index] = changeCard(card)
+                                if isinstance(self.cards[index], WhiteCard):
+                                    CardsDeckServer[index-1] = colors["white"]
+                                else:
+                                    CardsDeckServer[index - 1] = self.cards[index].color
+                                break
+                            elif colors[color] == card.color:
                                 self.playerCardsSum[color] += 1
                                 self.cards[index] = changeCard(card)
-                                CardsDeckServer[index - 1] = self.cards[index].color
+                                if isinstance(self.cards[index], WhiteCard):
+                                    CardsDeckServer[index-1] = colors["white"]
+                                else:
+                                    CardsDeckServer[index - 1] = self.cards[index].color
                                 break
                     else:
                         if self.cards[0].deckClickedCounter == 2:
@@ -236,7 +246,10 @@ def selectWay(pos, player):
 def compareWithServerDeck(CardsDeckServer, Player):
     for i in range(1, 5):
         if CardsDeckServer[i - 1] != Player.cards[i].color:
-            return False
+            if CardsDeckServer[i - 1] == colors["white"] and isinstance(Player.cards[i], WhiteCard):
+                continue
+            else:
+                return False
     return True
 
 
@@ -302,7 +315,7 @@ def client_program():
 
                     if btn.click(pos) == "Make Move":
                         net.send("MakeMove")
-                        playerTurn = net.recv()
+                        playersTurn = net.recv()
                         if playersTurn == player.id:
                             wayName = makeMove()
                             net.send("OK")
