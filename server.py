@@ -43,11 +43,21 @@ def thread_client(conn, player, clients):
             conn.send(pickle.dumps(playersTurn))
             clientsAnswer = pickle.loads(conn.recv(2048))
             if clientsAnswer == "OK" and playersTurn == 1:
-                playersTurn = 2
                 deckCards = pickle.loads(conn.recv(2048))
             elif clientsAnswer == "OK" and playersTurn == 2:
-                playersTurn = 1
                 deckCards = pickle.loads(conn.recv(2048))
+            elif clientsAnswer == "NO":
+                pass
+
+        if request == "MakeMove":
+            conn.send(pickle.dumps(playersTurn))
+            clientsAnswer = pickle.loads(conn.recv(2048))
+            if clientsAnswer == "OK" and playersTurn == 1:
+                playersTurn = 2
+                wayName = pickle.loads(conn.recv(2048))
+            elif clientsAnswer == "OK" and playersTurn == 2:
+                playersTurn = 1
+                wayName = pickle.loads(conn.recv(2048))
             elif clientsAnswer == "NO":
                 pass
 

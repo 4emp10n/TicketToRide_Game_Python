@@ -273,7 +273,6 @@ def client_program():
 
     running = True
     while running:
-        isNew = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -290,22 +289,28 @@ def client_program():
                 for btn in btns:
                     if btn.click(pos) == "Exit":
                         running = False
-                    if btn.click(pos) == "Choose card":
+                    if btn.click(pos) == "Choose card" and not player.choseCard:
                         window.fill(colors["white"])
                         net.send("Choose card")
                         playersTurn = net.recv()
                         if playersTurn == player.id:
                             player.chooseCard(CardsDeckServer)
-                            isNew = False
                             net.send("OK")
                             net.send(CardsDeckServer)
                         else:
                             net.send("NO")
 
                     if btn.click(pos) == "Make Move":
-                        wayName = makeMove()
-                        net.send("SendWay")
-                        net.send(wayName)
+                        net.send("MakeMove")
+                        playerTurn = net.recv()
+                        if playersTurn == player.id:
+                            wayName = makeMove()
+                            net.send("OK")
+                            net.send(wayName)
+                            player.choseCard = False
+                        else:
+                            net.send("NO")
+
 
                 selectWay(pos, player)
 

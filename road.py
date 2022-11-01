@@ -1,5 +1,7 @@
 from cards import *
 
+pygame.init()
+
 MAPSURFLOCATION = (220, 70)
 
 
