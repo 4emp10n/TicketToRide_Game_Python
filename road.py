@@ -10,7 +10,6 @@ class Road(Button):
         super().__init__(color, x, y, width, height)
         self.jockerSelected = False
 
-
     def click(self, window, pos, player):
         x1 = pos[0]
         y1 = pos[1]

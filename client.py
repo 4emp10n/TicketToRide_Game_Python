@@ -27,6 +27,7 @@ mapSurf = pygame.Surface((1320, 580))
 mapSurf.fill((255, 0, 255))
 MAPSURFLOCATION = (220, 70)
 
+
 class Player():
     def __init__(self, color=colors["blue"]):
         self.id = id
@@ -80,7 +81,7 @@ class Player():
                                 self.playerCardsSum["white"] += 1
                                 self.cards[index] = changeCard(card)
                                 if isinstance(self.cards[index], WhiteCard):
-                                    CardsDeckServer[index-1] = colors["white"]
+                                    CardsDeckServer[index - 1] = colors["white"]
                                 else:
                                     CardsDeckServer[index - 1] = self.cards[index].color
                                 break
@@ -88,7 +89,7 @@ class Player():
                                 self.playerCardsSum[color] += 1
                                 self.cards[index] = changeCard(card)
                                 if isinstance(self.cards[index], WhiteCard):
-                                    CardsDeckServer[index-1] = colors["white"]
+                                    CardsDeckServer[index - 1] = colors["white"]
                                 else:
                                     CardsDeckServer[index - 1] = self.cards[index].color
                                 break
@@ -140,7 +141,8 @@ class cityName:
 
 
 wayAE = Way([Road(colors["green"], 372, 272), Road(colors["green"], 457, 272), Road(colors["green"], 542, 272)], "AB")
-wayEB = Way([Road(colors["yellow"], 657, 272), Road(colors["yellow"], 742, 272), Road(colors["yellow"], 827, 272)], "EB")
+wayEB = Way([Road(colors["yellow"], 657, 272), Road(colors["yellow"], 742, 272), Road(colors["yellow"], 827, 272)],
+            "EB")
 wayDE = Way([Road(colors["red"], 625, 185, 25, 75)], "DE")
 wayCE = Way([Road(colors["white"], 625, 312, 25, 75), Road(colors["white"], 625, 397, 25, 75)], "CE")
 
@@ -148,12 +150,19 @@ cities = [cityName("A", 340, 255), cityName("E", 625, 255), cityName("B", 905, 2
           cityName("D", 625, 133), cityName("C", 625, 465)]
 ways = [wayAE, wayEB, wayDE, wayCE]
 
-def updateWays(ways, wayName):
+
+def updateWays(ways, wayName, playersTurn):
     for way in ways:
-        if way.wayName == wayName:
+        if way.wayName == wayName and playersTurn == 1:
             for road in way.way:
                 pygame.draw.circle(road.surf, colors["orange"], (5, 5), 7)
             way.isBuilt = True
+        elif way.wayName == wayName and playersTurn == 2:
+            for road in way.way:
+                pygame.draw.circle(road.surf, colors["green"], (5, 5), 7)
+            way.isBuilt = True
+
+
 # cards = [Card((randColor(colors)), 70, 190, 140, 82), Card((randColor(colors)), 70, 282, 140, 82),
 #          Card((randColor(colors)), 70, 374, 140, 82),
 #          Card((randColor(colors)), 70, 466, 140, 82), Card((randColor(colors)), 70, 558, 140, 82),
@@ -235,18 +244,20 @@ def selectWay(pos, player):
         for wayName in ways:
             if not wayName.isBuilt:
                 for road in wayName.way:
-                    #road.click(pos, colors["blue"])
+                    # road.click(pos, colors["blue"])
                     road.click(window, pos, player)
     elif isRoadSelected:
         for road in selectedWay.way:
-            #road.click(pos, colors["blue"])
+            # road.click(pos, colors["blue"])
             road.click(window, pos, player)
 
 
 def compareWithServerDeck(CardsDeckServer, Player):
-    for i in range(1, 5):
-        if CardsDeckServer[i - 1] != Player.cards[i].color:
-            if CardsDeckServer[i - 1] == colors["white"] and isinstance(Player.cards[i], WhiteCard):
+    for i in range(1, 6):
+        if CardsDeckServer[i - 1] != Player.cards[i].color and not isinstance(Player.cards[i], WhiteCard):
+            return False
+        elif CardsDeckServer[i - 1] != Player.cards[i].color and isinstance(Player.cards[i], WhiteCard):
+            if CardsDeckServer[i - 1] == colors["white"]:
                 continue
             else:
                 return False
@@ -271,7 +282,6 @@ def client_program():
     net.send("GetCards")
     CardsDeckServer = net.recv()  # get deck cards from server
 
-
     # players_moves = net.recv()
     # =========Init player==============
     player.addCardsToDeck(CardsDeckServer)
@@ -287,14 +297,14 @@ def client_program():
     running = True
     while running:
         net.send("GetTurn")
-        playerTurn = net.recv()
+        playersTurn = net.recv()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-            if event.type == TIMER and playerTurn == player.id:
+            if event.type == TIMER and playersTurn == player.id:
                 timer_time -= 1
                 timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
                 window.fill(colors["white"])
@@ -323,18 +333,19 @@ def client_program():
                             net.send("OK")
                             net.send(wayName)
                             player.choseCard = False
+                            # Update Timer
                             timer_time = 60
                             timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
                             window.fill(colors["white"])
                             window.blit(timer_text, (90, 133))
+                            # Update Timer End
                         else:
                             net.send("NO")
 
-
                 selectWay(pos, player)
-
-                for card in player.cards:
-                    card.click(pos)
+                if playersTurn == player.id and not player.choseCard:
+                    for card in player.cards:
+                        card.click(pos)
                 # wayAB.checkWayBuilding()
                 # wayAB.testFunc()
 
@@ -350,8 +361,7 @@ def client_program():
         # ===========Add-Surfaces-END=============
 
         net.send("GetWays")
-        updateWays(ways, net.recv())
-
+        updateWays(ways, net.recv(), playersTurn)
 
         # Add roads
         for wayName in ways:
@@ -372,8 +382,8 @@ def client_program():
                 btn.surf.fill(btn.color)
                 btn.addText(6, 15, 30)
             window.blit(btn.surf, btn.rect)
-        # Add deck cards
 
+        # Add deck cards
         net.send("GetTurn")
         playersTurn = net.recv()
         if playersTurn == player.id:

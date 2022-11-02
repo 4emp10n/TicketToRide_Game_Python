@@ -17,6 +17,7 @@ server_socket.listen(2)
 
 deckCards = []
 
+
 def randColor(colors):
     colorKey = random.choice(list(colors))
     return colors[colorKey]
@@ -29,6 +30,7 @@ for i in range(1, 6):
 
 playersTurn = 1
 wayName = ""
+
 
 def thread_client(conn, player, clients):
     conn.send(pickle.dumps(player))  # send player id
@@ -65,7 +67,7 @@ def thread_client(conn, player, clients):
         if request == "GetTurn":
             conn.send(pickle.dumps(playersTurn))
 
-        #Doesnt use yet
+        # Doesnt use yet
         if request == "SendWay":
             wayName = pickle.loads(conn.recv(2048))
             print(wayName)
@@ -82,7 +84,4 @@ if __name__ == '__main__':
         clients.append(conn)
         print("Connected to:", addr)
         start_new_thread(thread_client, (conn, currentPlayer, clients))
-        if currentPlayer == 3:
-            currentPlayer = 1
-        else:
-            currentPlayer += 1
+        currentPlayer += 1
