@@ -286,13 +286,15 @@ def client_program():
 
     running = True
     while running:
+        net.send("GetTurn")
+        playerTurn = net.recv()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-            if event.type == TIMER:
+            if event.type == TIMER and playerTurn == player.id:
                 timer_time -= 1
                 timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
                 window.fill(colors["white"])
@@ -321,6 +323,10 @@ def client_program():
                             net.send("OK")
                             net.send(wayName)
                             player.choseCard = False
+                            timer_time = 60
+                            timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
+                            window.fill(colors["white"])
+                            window.blit(timer_text, (90, 133))
                         else:
                             net.send("NO")
 
