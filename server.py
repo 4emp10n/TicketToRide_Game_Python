@@ -34,43 +34,60 @@ wayName = ""
 
 def thread_client(conn, player, clients):
     conn.send(pickle.dumps(player))  # send player id
+    print("Sending player id({x})".format(x = player))
     global playersTurn
     global deckCards
     global wayName
     while True:
         request = pickle.loads(conn.recv(2048))
+        print("Got request ({}) from player {}".format(request, player))
         if request == "Choose card":
             conn.send(pickle.dumps(playersTurn))
+            print("Sending playerTurnInfo ({}) to player {}".format(playersTurn, player))
             clientsAnswer = pickle.loads(conn.recv(2048))
+            print("Got clientsAnswer ({}) from player {}".format(clientsAnswer, player))
             if clientsAnswer == "OK" and playersTurn == 1:
                 deckCards = pickle.loads(conn.recv(2048))
+                print("Got deckCards ({}) from player {}".format(playersTurn, player))
             elif clientsAnswer == "OK" and playersTurn == 2:
                 deckCards = pickle.loads(conn.recv(2048))
+                print("Got deckCards ({}) from player {}".format(playersTurn, player))
             elif clientsAnswer == "NO":
                 pass
 
         if request == "MakeMove":
             conn.send(pickle.dumps(playersTurn))
+            print("Sending playerTurnInfo ({}) to player {}".format(playersTurn, player))
             clientsAnswer = pickle.loads(conn.recv(2048))
+            print("Got clientsAnswer ({}) from player {}".format(clientsAnswer, player))
             if clientsAnswer == "OK" and playersTurn == 1:
                 playersTurn = 2
+                print("PlayersTurn changed to {}".format(playersTurn))
                 wayName = pickle.loads(conn.recv(2048))
+                print("Got wayName ({}) from player {}".format(wayName, player))
             elif clientsAnswer == "OK" and playersTurn == 2:
                 playersTurn = 1
+                print("PlayersTurn changed to {}".format(playersTurn))
                 wayName = pickle.loads(conn.recv(2048))
+                print("Got wayName ({}) from player {}".format(wayName, player))
             elif clientsAnswer == "NO":
+                print("Player ({}) didn't select the way".format(player))
                 pass
         if request == "GetWays":
             conn.send(pickle.dumps(wayName))
+            print("Sending ways ({}) to player {}".format(wayName, player))
         if request == "GetCards":
             conn.send(pickle.dumps(deckCards))
+            print("Sending cards ({}) to player {}".format(deckCards, player))
         if request == "GetTurn":
             conn.send(pickle.dumps(playersTurn))
+            print("Sending PlayersTurn ({}) to player {}".format(playersTurn, player))
 
         # Doesnt use yet
         if request == "SendWay":
             wayName = pickle.loads(conn.recv(2048))
-            print(wayName)
+            print("Gow wayName ({}) from player {}".format(wayName, player))
+
 
     conn.close()  # close the connection
 
