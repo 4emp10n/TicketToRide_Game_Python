@@ -5,7 +5,7 @@ import pickle
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server = "192.168.178.43"
+        self.server = "35.158.118.91"
         self.port = 5555
         self.addr = (self.server, self.port)
         self.player = int(self.connect())
@@ -27,7 +27,13 @@ class Network:
             print(e)
 
     def recv(self):
-        return pickle.loads(self.client.recv(2048))
+        try:
+            self.client.settimeout(0.1)
+            return pickle.loads(self.client.recv(2048))
+        except:
+            return -1
+        finally:
+            self.client.setblocking(True)
 
     def close(self):
         self.client.close()

@@ -330,7 +330,7 @@ def client_program():
                             net.send("OK")
                             print("Sending OK from player {}".format(player.id))
                             net.send(CardsDeckServer)
-                            print("Sending CardsDeck from player {}".format(player.id))
+                            print("Sending CardsDeck ({}) from player {}".format(CardsDeckServer, player.id))
                         else:
                             net.send("NO")
                             print("Sending NO from player {}".format(player.id))
@@ -376,10 +376,14 @@ def client_program():
         window.blit(mapSurf, MAPSURFLOCATION)
         # ===========Add-Surfaces-END=============
 
-        net.send("GetWays")
-        print("Sending GetWays request from player {}".format(player.id))
-        updateWays(ways, net.recv(), playersTurn)
-        print("Got Ways and update ways player: {}".format(player.id))
+        newWay = -1
+        while newWay == -1:
+            net.send("GetWays")
+            print("Sending GetWays request from player {}".format(player.id))
+            newWay = net.recv()
+            print("Got Way {} to player: {}".format(newWay, player.id))
+        updateWays(ways, newWay, playersTurn)
+        print("Update ways player: {}".format(player.id))
 
         # Add roads
         for wayName in ways:
