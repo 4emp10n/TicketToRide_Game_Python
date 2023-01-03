@@ -277,11 +277,14 @@ def client_program():
     net = Network()
     player = Player()
     player.id = net.getPlayer()
+    print("Got player's id: {}".format(player.id))
 
     # Network initialize-END
     net.send("GetCards")
-    CardsDeckServer = net.recv()  # get deck cards from server
+    print("Sending GetCards request from player{}".format(player.id))
 
+    CardsDeckServer = net.recv()  # get deck cards from server
+    print("Receive DeckCards to player {}".format(player.id))
     # players_moves = net.recv()
     # =========Init player==============
     player.addCardsToDeck(CardsDeckServer)
@@ -297,7 +300,9 @@ def client_program():
     running = True
     while running:
         net.send("GetTurn")
+        print("Sending GetTurn request from player: {}".format(player.id))
         playersTurn = net.recv()
+        print("Got playersTurn: {} to player: {}".format(playersTurn, player.id))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -317,22 +322,32 @@ def client_program():
                     if btn.click(pos) == "Choose card" and not player.choseCard:
                         window.fill(colors["white"])
                         net.send("Choose card")
+                        print("Sending Choose card request from player {}".format(player.id))
                         playersTurn = net.recv()
+                        print("Got playersTurn: {} to player: {}".format(playersTurn, player.id))
                         if playersTurn == player.id:
                             player.chooseCard(CardsDeckServer)
                             net.send("OK")
+                            print("Sending OK from player {}".format(player.id))
                             net.send(CardsDeckServer)
+                            print("Sending CardsDeck from player {}".format(player.id))
                         else:
                             net.send("NO")
+                            print("Sending NO from player {}".format(player.id))
 
                     if btn.click(pos) == "Make Move":
                         net.send("MakeMove")
+                        print("Sending MakeMove request from player {}".format(player.id))
                         playersTurn = net.recv()
+                        print("Got playersTurn: {} to player: {}".format(playersTurn, player.id))
                         if playersTurn == player.id:
                             wayName = makeMove()
                             net.send("OK")
+                            print("Sending OK from player {}".format(player.id))
                             net.send(wayName)
+                            print("Sending wayName from player {}".format(player.id))
                             player.choseCard = False
+                            print("Player's {} choseCards state changed to False".format(player.id))
                             # Update Timer
                             timer_time = 60
                             timer_text = font.render("00:{x}".format(x=timer_time), 1, (0, 0, 0))
@@ -341,6 +356,7 @@ def client_program():
                             # Update Timer End
                         else:
                             net.send("NO")
+                            print("Sending NO from player {}".format(player.id))
 
                 selectWay(pos, player)
                 if playersTurn == player.id and not player.choseCard:
@@ -361,7 +377,9 @@ def client_program():
         # ===========Add-Surfaces-END=============
 
         net.send("GetWays")
+        print("Sending GetWays request from player {}".format(player.id))
         updateWays(ways, net.recv(), playersTurn)
+        print("Got Ways and update ways player: {}".format(player.id))
 
         # Add roads
         for wayName in ways:
@@ -385,10 +403,14 @@ def client_program():
 
         # Add deck cards
         net.send("GetTurn")
+        print("Sending GetTurn request from player: {}".format(player.id))
         playersTurn = net.recv()
+        print("Got playersTurn: {} to player: {}".format(playersTurn, player.id))
         if playersTurn == player.id:
             net.send("GetCards")
+            print("Sending GetCards request from player: {}".format(player.id))
             CardsDeckServer = net.recv()
+            print("Got CardsDeckServer to player: {}".format(player.id))
             if not compareWithServerDeck(CardsDeckServer, player):
                 player.addCardsToDeck(CardsDeckServer)
                 for card in player.cards:
